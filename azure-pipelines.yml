@@ -9,7 +9,7 @@ steps:
   inputs:
     versionSpec: '3.x'
 - script: |
-    python data_sample.py > output.txt
+    python scripts/data_sample.py > output.txt
   displayName: 'Run data script'
 - task: PublishBuildArtifacts@1
   inputs:
