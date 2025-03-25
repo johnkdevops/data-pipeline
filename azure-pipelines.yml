@@ -8,8 +8,14 @@ steps:
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '3.x'
+
 - script: |
-    python scripts/data_sample.py > output.txt
+    pwd
+    ls -R
+  displayName: 'Debug: Show Current Directory and Contents'
+
+- script: |
+    python data_sample.py > output.txt
   displayName: 'Run data script'
 - task: PublishBuildArtifacts@1
   inputs:
