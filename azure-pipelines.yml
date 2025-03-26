@@ -36,7 +36,7 @@ steps:
     az artifacts universal publish \
       --organization https://dev.azure.com/YOUR_ORGANIZATION \
       --project YOUR_PROJECT \
-      --feed-name "data-pipeline-feed" \
+      --feed "data-pipeline-feed" \
       --name "data-script-output" \
       --version "1.0.$(Build.BuildId)" \
       --description "Data script output artifact" \
