@@ -30,6 +30,9 @@ steps:
 
     # Authenticate using Personal Access Token from variable group
     echo "Logging in to Azure DevOps"
+    echo "##vso[task.setvariable variable=AZURE_DEVOPS_EXT_PAT;issecret=true;]$(AzureDevOpsPAT)"  
+
+    # Login to Azure DevOps
     az devops login \
       --organization "$(System.TeamFoundationCollectionUri)" \
       --token "$(AzureDevOpsPAT)"  # Reference PAT from variable group
@@ -48,7 +51,7 @@ steps:
     
     # Publish to Artifacts Feed
     az artifacts universal publish \
-      --organization "$(System.TeamFoundationCollectionUri) \
+      --organization "$(System.TeamFoundationCollectionUri)" \
       --project "$(System.TeamProject)" \
       --scope project \
       --feed "data-pipeline-feed" \
@@ -58,4 +61,4 @@ steps:
       --path artifact.zip
   displayName: 'Publish to Azure Artifacts Feed'
   env:
-    AzureDevOpsPAT: $(AzureDevOpsPAT)  # Reference PAT from variable group
+    AZURE_DEVOPS_PAT: $(AzureDevOpsPAT)  # Pass PAT as environment variable
