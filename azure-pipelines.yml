@@ -1,9 +1,6 @@
 trigger:
   - main
 
-variables:
-  - group: 'pipeline-secrets'
-
 pool:
   vmImage: 'ubuntu-latest'
 
