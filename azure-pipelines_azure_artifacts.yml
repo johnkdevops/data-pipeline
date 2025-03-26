@@ -26,8 +26,7 @@ steps:
     cp output.txt $(Build.ArtifactStagingDirectory)/artifact/
     echo "$(Build.BuildId)" > $(Build.ArtifactStagingDirectory)/artifact/version.txt
     ls -lh $(Build.ArtifactStagingDirectory)/artifact/
-    zip -r -0 artifact.zip artifact
-  displayName: 'Stage and Zip Files'
+  displayName: 'Stage Files for Publishing'
 
 - task: UniversalPackages@0
   displayName: 'Publish to Azure Artifacts Feed'
