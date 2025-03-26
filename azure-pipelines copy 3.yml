@@ -1,0 +1,49 @@
+trigger:
+  - main
+
+variables:
+  # Reference the variable group
+  - group: 'pipeline-secrets'  # Variable group name containing the PAT
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+  displayName: 'Setup Python'
+
+- script: |
+    python ./scripts/data_script.py > output.txt
+  displayName: 'Run Data Script'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: 'output.txt'
+    artifactName: 'ScriptOutput'
+  displayName: 'Publish Build Artifact'
+
+- script: |
+    # Install Azure DevOps Extension
+    # az extension add --name azure-devops
+    
+    # Configure Azure DevOps CLI
+    az devops configure --defaults organization=https://dev.azure.com/Zanabar777 project=data-pipeline
+    
+    # Create Universal Package
+    mkdir -p artifact
+    cp output.txt artifact/
+    echo "$(Build.BuildId)" > artifact/version.txt
+    
+    # Publish to Artifacts Feed
+    az artifacts universal publish \
+      --organization https://dev.azure.com/YOUR_ORGANIZATION \
+      --project YOUR_PROJECT \
+      --scope project \
+      --feed "data-pipeline-feed" \
+      --name "data-script-output" \
+      --version "1.0.$(Build.BuildId)" \
+      --description "Data script output artifact" \
+      --path artifact
+  displayName: 'Publish to Azure Artifacts Feed'
