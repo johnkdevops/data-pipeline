@@ -22,7 +22,7 @@ steps:
 
 - script: |
     # Install Azure DevOps Extension
-    az extension add --name azure-devops
+    # az extension add --name azure-devops
     
     # Configure Azure DevOps CLI
     az devops configure --defaults organization=https://dev.azure.com/Zanabar777 project=data-pipeline
@@ -36,6 +36,7 @@ steps:
     az artifacts universal publish \
       --organization https://dev.azure.com/YOUR_ORGANIZATION \
       --project YOUR_PROJECT \
+      --scope project \
       --feed "data-pipeline-feed" \
       --name "data-script-output" \
       --version "1.0.$(Build.BuildId)" \
