@@ -15,7 +15,7 @@ steps:
   displayName: 'Debug: Show Current Directory and Contents'
 
 - script: |
-    python data_sample.py > output.txt
+    python data_script.py > output.txt
   displayName: 'Run data script'
 - task: PublishBuildArtifacts@1
   inputs:
