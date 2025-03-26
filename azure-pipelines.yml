@@ -2,8 +2,7 @@ trigger:
   - main
 
 variables:
-  # Reference the variable group
-  - group: 'pipeline-secrets'  # Variable group name containing the PAT
+  - group: 'pipeline-secrets'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -25,50 +24,25 @@ steps:
   displayName: 'Publish Build Artifact'
 
 - script: |
-    # Install Azure DevOps Extension
-    az extension add --name azure-devops \
-    --only-show-errors
+    # Prepare files for Universal Packages
+    mkdir -p $(Build.ArtifactStagingDirectory)/artifact
+    cp output.txt $(Build.ArtifactStagingDirectory)/artifact/
+    echo "$(Build.BuildId)" > $(Build.ArtifactStagingDirectory)/artifact/version.txt
+    ls -lh $(Build.ArtifactStagingDirectory)/artifact/
+  displayName: 'Stage Files for Publishing'
 
-    # Authenticate using Personal Access Token from variable group
-    echo "Logging in to Azure DevOps"
-    echo "##vso[task.setvariable variable=AZURE_DEVOPS_EXT_PAT;issecret=true;]$(AzureDevOpsPAT)"  
-
-    # Login to Azure DevOps
-    az devops login \
-      --organization "$(System.TeamFoundationCollectionUri)" \
-      --only-show-errors
-
-    # Configure default organization
-    az devops configure --defaults 
-    organization="$(System.TeamFoundationCollectionUri)" \
-    --only-show-errors
-
-    # Prepare artifact directory
-    mkdir -p artifact
-    cp output.txt artifact/
-    echo "$(Build.BuildId)" > artifact/version.txt
-    
-    # Create zip artifact with faster compression
-    echo "Artifact directory contents:"
-    ls -lh artifact
-    echo "Size of output.txt:"
-    ls -lh output.txt
-    zip -r -0 artifact.zip artifact  # Use -0 for no compression if speed is priority
-    
-    # Publish to Artifacts Feed
-    echo "Starting zip process at $(date)"
-    az artifacts universal publish \
-      --organization "$(System.TeamFoundationCollectionUri)" \
-      --project "$(System.TeamProject)" \
-      --scope project \
-      --feed "data-pipeline-feed" \
-      --name "data-script-output" \
-      --version "1.0.$(Build.BuildId)" \
-      --description "Data script output artifact" \
-      --path artifact.zip
-      --detect true \
-      --verbose
-    echo "Upload finished at $(date)
+- task: UniversalPackages@0
   displayName: 'Publish to Azure Artifacts Feed'
-  env:
-    AZURE_DEVOPS_PAT: $(AzureDevOpsPAT)  # Pass PAT as environment variable
+  inputs:
+    command: 'publish'
+    publishDirectory: '$(Build.ArtifactStagingDirectory)/artifact'  # Directory with output.txt and version.txt
+    vstsFeedPublish: '$(System.TeamProject)/data-pipeline-feed'     # Project-scoped feed: <project>/<feed>
+    vstsFeedPackagePublish: 'data-script-output'                    # Package name (lowercase)
+    versionOption: 'custom'                                         # Custom version
+    versionPublish: '1.0.$(Build.BuildId)'                          # Matches your current versioning
+    packagePublishDescription: 'Data script output artifact'        # Matches your description
+
+   
+    
+    
+ 
