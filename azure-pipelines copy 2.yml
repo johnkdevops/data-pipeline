@@ -1,0 +1,52 @@
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: artifactVersion
+    value: '1.0.$(Build.BuildId)'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+  displayName: 'Setup Python'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install wheel twine
+  displayName: 'Install Build Dependencies'
+
+- script: |
+    python ./scripts/data_script.py > output.txt
+  displayName: 'Run Data Script'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: 'output.txt'
+    artifactName: 'ScriptOutput'
+  displayName: 'Publish Build Artifact'
+
+- script: |
+    mkdir -p dist
+    echo "$(artifactVersion)" > dist/version.txt
+    cp output.txt dist/output.txt
+  displayName: 'Prepare Artifact Package'
+
+- task: TwinePushV0@1
+  inputs:
+    artifactFeed: 'data-pipeline-feed'
+    packagesToPush: 'dist/*'
+    allowOverwrite: true
+  displayName: 'Publish to Azure Artifacts Feed'
+
+- task: UniversalPackageV0@1
+  inputs:
+    command: 'publish'
+    publishDirectory: 'dist'
+    feedsToUsePublish: 'internal'
+    vstsFeedPublish: 'data-pipeline-feed'
+    packagePublishDescription: 'Data Pipeline Script Output'
+  displayName: 'Publish Universal Package'
