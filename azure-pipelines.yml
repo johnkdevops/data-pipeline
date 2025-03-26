@@ -5,7 +5,6 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  - group: artifact-config
   - name: artifactVersion
     value: '1.0.$(Build.BuildId)'
 
