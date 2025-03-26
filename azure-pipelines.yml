@@ -25,15 +25,20 @@ steps:
     mkdir -p $(Build.ArtifactStagingDirectory)/artifact
     cp output.txt $(Build.ArtifactStagingDirectory)/artifact/
     echo "$(Build.BuildId)" > $(Build.ArtifactStagingDirectory)/artifact/version.txt
-    ls -lh $(Build.ArtifactStagingDirectory)/artifact/
+    
+    # Change to staging directory and zip artifact
+    cd $(Build.ArtifactStagingDirectory)
     zip -r -0 artifact.zip artifact
+
+    # Verify the zip file
+    ls -lh $(Build.ArtifactStagingDirectory)/artifact.zip
   displayName: 'Stage and Zip Files'
 
 - task: UniversalPackages@0
   displayName: 'Publish to Azure Artifacts Feed'
   inputs:
     command: 'publish'
-    publishDirectory: '$(Build.ArtifactStagingDirectory)/artifact'  # Directory with output.txt and version.txt
+    publishDirectory: '$(Build.ArtifactStagingDirectory)/artifact.zip'  # Publish the zip file
     vstsFeedPublish: '$(System.TeamProject)/data-pipeline-feed'     # Project-scoped feed: <project>/<feed>
     vstsFeedPackagePublish: 'data-script-output'                    # Package name (lowercase)
     versionOption: 'custom'                                         # Custom version
