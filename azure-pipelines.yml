@@ -34,8 +34,7 @@ steps:
 
     # Login to Azure DevOps
     az devops login \
-      --organization "$(System.TeamFoundationCollectionUri)" \
-      --token "$(AzureDevOpsPAT)"  # Reference PAT from variable group
+      --organization "$(System.TeamFoundationCollectionUri)" 
 
     # Configure default organization
     az devops configure --defaults 
