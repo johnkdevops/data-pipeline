@@ -9,15 +9,38 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+  displayName: 'Setup Python'
+
 - script: |
+    python ./scripts/data_script.py > output.txt
+  displayName: 'Run Data Script'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: 'output.txt'
+    artifactName: 'ScriptOutput'
+  displayName: 'Publish Build Artifact'
+
+- script: |
+    # Install Azure DevOps Extension
+    az extension add --name azure-devops
+
     # Authenticate using Personal Access Token from variable group
+    echo "Logging in to Azure DevOps"
     az devops login \
-      --organization "https://dev.azure.com/Zanabar777" \
+      --organization "$(System.TeamFoundationCollectionUri)" \
       --token "$(AzureDevOpsPAT)"  # Reference PAT from variable group
 
-    # Prepare artifact
+    # Configure default organization
+    az devops configure --defaults 
+    organization="$(System.TeamFoundationCollectionUri)"
+
+    # Prepare artifact directory
     mkdir -p artifact
-    python ./scripts/data_script.py > artifact/output.txt
+    cp output.txt artifact/
     echo "$(Build.BuildId)" > artifact/version.txt
     
     # Create zip artifact
@@ -25,8 +48,8 @@ steps:
     
     # Publish to Artifacts Feed
     az artifacts universal publish \
-      --organization "https://dev.azure.com/Zanabar777 \
-      --project "YOUR_PROJECT_NAME" \
+      --organization "$(System.TeamFoundationCollectionUri) \
+      --project "$(System.TeamProject)" \
       --scope project \
       --feed "data-pipeline-feed" \
       --name "data-script-output" \
@@ -34,3 +57,5 @@ steps:
       --description "Data script output artifact" \
       --path artifact.zip
   displayName: 'Publish to Azure Artifacts Feed'
+  env:
+    AzureDevOpsPAT: $(AzureDevOpsPAT)  # Reference PAT from variable group
