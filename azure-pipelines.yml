@@ -26,7 +26,8 @@ steps:
 
 - script: |
     # Install Azure DevOps Extension
-    az extension add --name azure-devops
+    az extension add --name azure-devops \
+    --only-show-errors
 
     # Authenticate using Personal Access Token from variable group
     echo "Logging in to Azure DevOps"
@@ -34,21 +35,28 @@ steps:
 
     # Login to Azure DevOps
     az devops login \
-      --organization "$(System.TeamFoundationCollectionUri)" 
+      --organization "$(System.TeamFoundationCollectionUri)" \
+      --only-show-errors
 
     # Configure default organization
     az devops configure --defaults 
-    organization="$(System.TeamFoundationCollectionUri)"
+    organization="$(System.TeamFoundationCollectionUri)" \
+    --only-show-errors
 
     # Prepare artifact directory
     mkdir -p artifact
     cp output.txt artifact/
     echo "$(Build.BuildId)" > artifact/version.txt
     
-    # Create zip artifact
-    zip -r artifact.zip artifact
+    # Create zip artifact with faster compression
+    echo "Artifact directory contents:"
+    ls -lh artifact
+    echo "Size of output.txt:"
+    ls -lh output.txt
+    zip -r -0 artifact.zip artifact  # Use -0 for no compression if speed is priority
     
     # Publish to Artifacts Feed
+    echo "Starting zip process at $(date)"
     az artifacts universal publish \
       --organization "$(System.TeamFoundationCollectionUri)" \
       --project "$(System.TeamProject)" \
@@ -58,6 +66,9 @@ steps:
       --version "1.0.$(Build.BuildId)" \
       --description "Data script output artifact" \
       --path artifact.zip
+      --detect true \
+      --verbose
+    echo "Upload finished at $(date)
   displayName: 'Publish to Azure Artifacts Feed'
   env:
     AZURE_DEVOPS_PAT: $(AzureDevOpsPAT)  # Pass PAT as environment variable
